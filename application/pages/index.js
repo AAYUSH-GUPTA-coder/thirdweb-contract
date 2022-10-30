@@ -2,62 +2,61 @@ import {
   ConnectWallet,
   useContract,
   useContractRead,
+  useContractWrite,
+  Web3Button,
+  ThirdwebNftMedia,
 } from "@thirdweb-dev/react";
 import styles from "../styles/Home.module.css";
 
-export default function Home() {
-  const { contract } = useContract(
-    "0xd5B4b81194614F6f6fd67BEdCe8805782F09551a"
-  );
+const contractAddress = "0xd5B4b81194614F6f6fd67BEdCe8805782F09551a";
 
+export default function Home() {
+  const { contract } = useContract(contractAddress);
+
+  const {
+    data: nfts,
+    isLoading,
+    error,
+  } = useNFTs(contract, { start: 0, count: 100 });
+
+  // read data using useContractRead
   const { data: contractName } = useContractRead(contract, "name");
   console.log(contractName);
 
+  //
+
   return (
-    <div className={styles.container}>
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://thirdweb.com/">thirdweb</a>!
-        </h1>
+    <div>
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : (
+          nfts.map((nft) => (
+          <>
+          <ThirdwebNftMedia
+            key={nft.metadata.id.toString()}
+            metadata={nft.metadata}
+            style={{ width: 200 }}
+          />
+          <p>{nft.metadata.name}</p>
+          </>
+        ))
+      )}
 
-        <p className={styles.description}>
-          Get started by configuring your desired network in{" "}
-          <code className={styles.code}>pages/_app.js</code>, then modify the{" "}
-          <code className={styles.code}>pages/index.js</code> file!
-        </p>
-
-        <div className={styles.connect}>
-          <ConnectWallet />
-        </div>
-
-        <div className={styles.grid}>
-          <a href="https://portal.thirdweb.com/" className={styles.card}>
-            <h2>Portal &rarr;</h2>
-            <p>
-              Guides, references and resources that will help you build with
-              thirdweb.
-            </p>
-          </a>
-
-          <a href="https://thirdweb.com/dashboard" className={styles.card}>
-            <h2>Dashboard &rarr;</h2>
-            <p>
-              Deploy, configure and manage your smart contracts from the
-              dashboard.
-            </p>
-          </a>
-
-          <a
-            href="https://portal.thirdweb.com/templates"
-            className={styles.card}
-          >
-            <h2>Templates &rarr;</h2>
-            <p>
-              Discover and clone template projects showcasing thirdweb features.
-            </p>
-          </a>
-        </div>
-      </main>
+      <div style={{ maxWidth: 200 }}>
+        <Web3Button
+          contractAddress={contractAddress}
+          action={() =>
+            contract.erc721.mint({
+              name: "hello world",
+              description: "hello world this is the description",
+              image:
+                "https://portal.thirdweb.com/img/thirdweb-logo-transparent-black.svg",
+            })
+          }
+        >
+          MINT AN NFT
+        </Web3Button>
+      </div>
     </div>
   );
 }
